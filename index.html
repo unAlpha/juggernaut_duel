@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>概率科普：剑圣对决</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+
+
+        <div class="main-content">
+            <!-- Left Panel: Juggernaut A Settings -->
+            <div class="panel settings-panel left-panel" id="panelA">
+                <button class="panel-toggle toggle-left" id="toggleLeft">&#9776;</button>
+                <div class="panel-content">
+                    <h2 class="neon-text blue">闪避剑圣 (A)</h2>
+                    <div class="control-group">
+                        <label><span>初始血量:</span> <input type="number" id="hpAVal" class="num-input" value="10" min="1" max="100"></label>
+                        <input type="range" id="hpA" min="1" max="100" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label><span>闪避概率:</span> <span><span id="dodgeAVal">50</span>%</span></label>
+                        <input type="range" id="dodgeA" min="0" max="100" value="50">
+                    </div>
+                    <div class="control-group">
+                        <label><span>暴击概率:</span> <span><span id="critAVal">0</span>%</span></label>
+                        <input type="range" id="critA" min="0" max="100" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label><span>暴击倍数:</span> <span><span id="critMultAVal">2</span>x</span></label>
+                        <input type="range" id="critMultA" min="1.5" max="5" step="0.5" value="2">
+                    </div>
+
+                    <hr class="panel-divider">
+
+                    <h2 class="neon-text global-title">全局设定</h2>
+                    <div class="control-group">
+                        <label>战斗模式</label>
+                        <select id="combatMode" class="mode-select">
+                            <option value="simultaneous">同时对砍</option>
+                            <option value="turn_a" selected>轮流模式 (闪避先砍)</option>
+                            <option value="turn_b">轮流模式 (暴击先砍)</option>
+                            <option value="a_only">单边砍：A砍B</option>
+                            <option value="b_only">单边砍：B砍A</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>结算优先级</label>
+                        <select id="calcPriority" class="mode-select">
+                            <option value="dodge_first" selected>闪避计算优先 (先算闪避)</option>
+                            <option value="crit_first">暴击计算优先 (触发克敌机先)</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="trueStrikeGroup" style="display: none;">
+                        <label><span>克敌机先概率:</span> <span><span id="trueStrikeVal">80</span>%</span></label>
+                        <input type="range" id="trueStrike" min="0" max="100" value="80">
+                    </div>
+
+                    <div class="control-group">
+                        <label>单次砍击时长(ms): <input type="number" id="strikeDurationVal" class="num-input" value="500" min="1" max="2000" step="1"></label>
+                        <input type="range" id="strikeDuration" min="1" max="2000" step="1" value="500">
+                    </div>
+
+                    <div class="action-buttons side-actions">
+                        <button id="startBtn" class="glow-btn">开始模拟</button>
+                        <div class="split-buttons" style="display: flex; gap: 10px; width: 100%;">
+                            <button id="resetBtn" class="outline-btn" style="flex: 1;">重置状态</button>
+                            <button id="analysisBtn" class="outline-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; text-shadow: 0 0 5px #00f0ff;">数据分析</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-resizer left-resizer" data-panel="left" role="separator" aria-orientation="vertical" aria-label="拖拽调整左侧栏宽度"></div>
+            </div>
+
+            <!-- Center Arena -->
+            <div class="arena-panel">
+                <div class="top-health-boards">
+                    <div class="health-board board-a">
+                        <div class="health-bar-bg">
+                            <div class="health-bar-trail" id="healthTrailA"></div>
+                            <div class="health-bar" id="healthA"></div>
+                            <span class="health-text left-text" id="healthTextA">20 / 20</span>
+                        </div>
+                        <div class="fighter-name fighter-name-a">闪避剑圣</div>
+                    </div>
+                    <div class="health-board board-b">
+                        <div class="health-bar-bg">
+                            <div class="health-bar-trail" id="healthTrailB"></div>
+                            <div class="health-bar" id="healthB"></div>
+                            <span class="health-text right-text" id="healthTextB">20 / 20</span>
+                        </div>
+                        <div class="fighter-name fighter-name-b">暴击剑圣</div>
+                    </div>
+                </div>
+
+
+
+                <div class="arena">
+                    <div class="character-container" id="charA-container">
+                        <div class="character" id="charA">
+                            <div class="sprite-character sprite-a"></div>
+                            <div class="slash-effect" id="slashA"></div>
+                        </div>
+                        <div class="floating-text-container" id="floatA"></div>
+                    </div>
+
+
+
+                    <div class="character-container" id="charB-container">
+                        <div class="character" id="charB">
+                            <div class="sprite-character sprite-b"></div>
+                            <div class="slash-effect" id="slashB"></div>
+                        </div>
+                        <div class="floating-text-container" id="floatB"></div>
+                    </div>
+                </div>
+
+
+                
+                <!-- Win Message -->
+                <div id="winMessage" class="win-message hidden">
+                    <h2 id="winText"></h2>
+                </div>
+            </div>
+
+            <!-- Right Panel: Juggernaut B Settings and Logs -->
+            <div class="panel settings-panel right-panel" id="panelB">
+                <button class="panel-toggle toggle-right" id="toggleRight">&#9776;</button>
+                <div class="panel-content">
+                    <h2 class="neon-text red">暴击剑圣 (B)</h2>
+                    <div class="control-group">
+                        <label><span>初始血量:</span> <input type="number" id="hpBVal" class="num-input" value="10" min="1" max="100"></label>
+                        <input type="range" id="hpB" min="1" max="100" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label><span>闪避概率:</span> <span><span id="dodgeBVal">0</span>%</span></label>
+                        <input type="range" id="dodgeB" min="0" max="100" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label><span>暴击概率:</span> <span><span id="critBVal">50</span>%</span></label>
+                        <input type="range" id="critB" min="0" max="100" value="50">
+                    </div>
+                    <div class="control-group">
+                        <label><span>暴击倍数:</span> <span><span id="critMultBVal">2</span>x</span></label>
+                        <input type="range" id="critMultB" min="1.5" max="5" step="0.5" value="2">
+                    </div>
+
+                    <hr class="panel-divider">
+                    <h2 class="neon-text global-title">战斗日志</h2>
+
+                    <div class="log-container">
+                        <div id="battleLog" class="battle-log"></div>
+                    </div>
+                </div>
+                <div class="panel-resizer right-resizer" data-panel="right" role="separator" aria-orientation="vertical" aria-label="拖拽调整右侧栏宽度"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Analysis Modal -->
+    <div id="analysisModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" id="closeAnalysisModal">&times;</button>
+            <h2 class="neon-text global-title" style="text-align: center;">战斗数据分析</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-target="currentMatchTab">本局复盘 (血量曲线)</button>
+                <button class="tab-btn" data-target="mcSimTab">概率预测 (千局推演)</button>
+                <button class="tab-btn" data-target="hpTrendTab">血量-胜率趋势</button>
+            </div>
+            
+            <div class="tab-content active" id="currentMatchTab">
+                <canvas id="hpCurveChart"></canvas>
+            </div>
+            
+            <div class="tab-content" id="mcSimTab">
+                <div class="charts-row">
+                    <div class="chart-container" style="width: 40%; flex-direction: column;">
+                        <div style="width: 100%; flex: 1; position: relative; min-height: 0;">
+                            <canvas id="winRateChart"></canvas>
+                        </div>
+                        <div style="width: 100%; display: flex; justify-content: center; margin-top: 15px;">
+                            <div id="customWinRateLegend" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; font-size: 14px; color: #8b9bb4;"></div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="width: 60%; flex-direction: column;">
+                        <div style="width: 100%; flex: 1; position: relative; min-height: 0;">
+                            <canvas id="hpDistChart"></canvas>
+                        </div>
+                        <div style="text-align: center; color: #ff5555; font-size: 20px; font-weight: bold; margin-top: 10px; letter-spacing: 2px;">
+                            初始血量：<span id="mcSimHpLabel">10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="hpTrendTab">
+                <canvas id="hpTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
